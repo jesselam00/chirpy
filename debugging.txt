@@ -1,0 +1,3 @@
+"postgres://jesselam00:@localhost:5432/chirpy"
+
+goose -dir sql/schema postgres "postgres://jesselam00:@localhost:5432/chirpy" up
