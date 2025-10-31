@@ -7,20 +7,19 @@ import (
 	"time"
 
 	"github.com/jesselam00/chirpy/internal/auth"
+	"github.com/jesselam00/chirpy/internal/database"
 )
 
 func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 	type parameters struct {
 		Password         string `json:"password"`
 		Email            string `json:"email"`
-		ExpiresInSeconds int    `json:"expires_in_seconds"`
 	}
 	type response struct {
 		User
 		Token        string `json:"token"`
 		RefreshToken string `json:"refresh_token"`
 	}
-
 
 	decoder := json.NewDecoder(r.Body)
 	params := parameters{}
@@ -38,22 +37,29 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 
 	valid, _ := auth.CheckPasswordHash(params.Password, user.HashedPassword)
 	if !valid {
-		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password", errors.New("Incorrect email or password"))
+		respondWithError(w, http.StatusUnauthorized, "Incorrect email or password", errors.New("incorrect email or password"))
 		return
-	}
-
-	expirationTime := time.Hour
-	if params.ExpiresInSeconds > 0 && params.ExpiresInSeconds < 3600 {
-		expirationTime = time.Duration(params.ExpiresInSeconds) * time.Second
 	}
 
 	accessToken, err := auth.MakeJWT(
 		user.ID,
 		cfg.jwtSecret,
-		expirationTime,
+		time.Hour,
 	)
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create access JWT", err)
+		return
+	}
+
+	refreshToken := auth.MakeRefreshToken()
+
+	_, err = cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		UserID:    user.ID,
+		Token:     refreshToken,
+		ExpiresAt: time.Now().UTC().Add(time.Hour * 24 * 60),
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't save refresh token", err)
 		return
 	}
 
@@ -64,6 +70,7 @@ func (cfg *apiConfig) handlerLogin(w http.ResponseWriter, r *http.Request) {
 			UpdatedAt: user.UpdatedAt,
 			Email:     user.Email,
 		},
-		Token: accessToken,
+		Token:        accessToken,
+		RefreshToken: refreshToken,
 	})
 }
