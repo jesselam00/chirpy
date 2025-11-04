@@ -264,9 +264,3 @@ JWT_SECRET=mysecretkey
 - JWTs expire based on the duration configured in your Go code (`expires_in`).
 - Tokens should be sent in the `Authorization: Bearer <token>` header.
 - Goose migrations are stored in `sql/schema/`.
-
----
-
-## 📜 License
-
-MIT License © 2025 [Your Name]
