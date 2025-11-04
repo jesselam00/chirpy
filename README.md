@@ -41,6 +41,19 @@ cd chirpy
 Create a `.env` file in the project root:
 
 ```bash
+# Server configuration
+PORT=8080
+JWT_SECRET=mysecretkey
+
+# Database connection (PostgreSQL)
+DB_URL=postgres://<user>:<password>@localhost:5432/chirpy?sslmode=disable
+
+# Environment
+ENV=development   # or production
+
+# External integrations (if applicable)
+POLKA_API_KEY=your-polka-api-key  # used in webhooks handler (for admin payments)
+```bash
 DB_URL=postgres://<user>:<password>@localhost:5432/chirpy?sslmode=disable
 JWT_SECRET=<your_jwt_secret>
 ```
@@ -249,18 +262,14 @@ curl -X POST http://localhost:8080/api/reset
 
 ---
 
-## 🧩 Example Environment Variables
-
-```bash
-PORT=8080
-DB_URL=postgres://jlam:qwe123@localhost:5432/chirpy?sslmode=disable
-JWT_SECRET=mysecretkey
-```
-
----
-
 ## 🧠 Notes
 
 - JWTs expire based on the duration configured in your Go code (`expires_in`).
 - Tokens should be sent in the `Authorization: Bearer <token>` header.
 - Goose migrations are stored in `sql/schema/`.
+
+---
+
+## 📜 License
+
+MIT License © 2025 [Your Name]
